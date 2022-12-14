@@ -1,3 +1,5 @@
+use aes::cipher::KeyInit;
+use btleplug::api::{Characteristic, CharPropFlags};
 use btleplug::api::{bleuuid::uuid_from_u16, Central, Manager as _, Peripheral as _, ScanFilter, WriteType};
 use btleplug::platform::{Adapter, Manager, Peripheral};
 use futures::stream::StreamExt;
@@ -7,6 +9,7 @@ use std::thread;
 use std::time::Duration;
 use tokio::time;
 use uuid::Uuid;
+use aes::Aes128;
 
 macro_rules! create_uuid {
     ($a:expr) => {Uuid::parse_str($a).unwrap()};
@@ -75,7 +78,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 subscribe_to_characteristic(&device, &chars[..3]).await?;
 
                 // Authentication Challange
-                authenticate(&device).await?;
+                let auth: Characteristic = Characteristic { 
+                    uuid: Uuid::parse_str("00000009-0000-3512-2118-0009af100700").unwrap(), 
+                    service_uuid: Uuid::parse_str("0000fee1-0000-1000-8000-00805f9b34fb").unwrap(), 
+                    properties: CharPropFlags::NOTIFY | CharPropFlags::WRITE_WITHOUT_RESPONSE | CharPropFlags::NOTIFY
+                    // "READ | WRITE_WITHOUT_RESPONSE | NOTIFY" 
+                };
+
+                authenticate(&device, &auth).await?;
             }
         }
     }
@@ -101,19 +111,39 @@ async fn subscribe_to_characteristic(device: &Peripheral, uuids: &[Uuid]) -> Res
 }
 
 // Authentication Function
-async fn authenticate(device: &Peripheral) -> Result<(), Box<dyn Error>> {         
+async fn authenticate(device: &Peripheral, auth_char: &Characteristic) -> Result<(), Box<dyn Error>> {         
 
-    let AUTH_KEY: u128 = 0xc9a57d375d8d96ffd3331b73b123d43b; // Auth Key
+    let AUTH_KEY = 0xc9a57d375d8d96ffd3331b73b123d43bu128.to_le_bytes(); // Auth Key as Hex
 
     println!("Starting Authentication...");
+
+    // Ask for Authentication
+    device.write(auth_char,&[0x01, 0x00], WriteType::WithoutResponse).await?;
 
     // Get data from authentication notification
     let mut notification_stream = device.notifications().await?;
     while let Some(data) = notification_stream.next().await {
+        println!("Awaiting for Data...");
+        
         println!(
             "Received data from [{:?}]: {:?}",
             data.uuid, data.value
         );
+
+
+        // This means we received authentication information
+        if data.uuid == auth_char.uuid {
+            let random_number = &data.value[3..];
+
+            println!("Number Received : {:#?}", random_number);
+
+            //let cipher = Aes128::new_from_slice(&AUTH_KEY);
+
+
+            //let RANDOM_NUMBER_ENCRYPTED = 
+            // We are sending the encrypted key
+            //device.write(auth_char, &[0x00, 0x03], WriteType::WithResponse).await?;
+        }
     }
 
     Ok(())
