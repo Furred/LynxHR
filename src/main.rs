@@ -1,5 +1,6 @@
 use btleplug::api::{bleuuid::uuid_from_u16, Central, Manager as _, Peripheral as _, ScanFilter, WriteType};
 use btleplug::platform::{Adapter, Manager, Peripheral};
+use futures::stream::StreamExt;
 use rand::{Rng, thread_rng};
 use std::error::Error;
 use std::thread;
@@ -18,10 +19,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     
     let chars: Vec<Uuid> = vec![
         create_uuid!("00000009-0000-3512-2118-0009af100700"), // Authentication
-        //create_uuid!("00002a37-0000-1000-8000-00805f9b34fb"), // HR Mesure
-        //create_uuid!("00002a39-0000-1000-8000-00805f9b34fb"), // HR Control
-        //create_uuid!("00000006-0000-3512-2118-0009af100700"), // Battery (Used for NeosVR Only)
-        //create_uuid!("00002a2b-0000-1000-8000-00805f9b34fb") // Current Time (Used for NeosVR Only / Logs)
+
+        // No Authentication Required
+        create_uuid!("00000006-0000-3512-2118-0009af100700"), // Battery (Used for NeosVR Only)
+        create_uuid!("00002a2b-0000-1000-8000-00805f9b34fb"), // Current Time (Used for NeosVR Only / Logs)
+
+        // Authentication Required
+        create_uuid!("00002a37-0000-1000-8000-00805f9b34fb"), // HR Mesure
+        create_uuid!("00002a39-0000-1000-8000-00805f9b34fb") // HR Control
     ];
 
     loop {
@@ -66,8 +71,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 println!("Connected!");
                 println!("Warning! Authentication Key is required to access your device!");
     
-                // Subscribe to Chars
-                subscribe_to_characteristic(&device, &chars).await?; // Not working <============
+                // Subscribe to Auth Char
+                subscribe_to_characteristic(&device, &chars[..3]).await?;
+
+                // Authentication Challange
+                authenticate(&device).await?;
             }
         }
     }
@@ -93,9 +101,20 @@ async fn subscribe_to_characteristic(device: &Peripheral, uuids: &[Uuid]) -> Res
 }
 
 // Authentication Function
-async fn authenticate(device: &Peripheral) {      
+async fn authenticate(device: &Peripheral) -> Result<(), Box<dyn Error>> {         
 
     let AUTH_KEY: u128 = 0xc9a57d375d8d96ffd3331b73b123d43b; // Auth Key
 
     println!("Starting Authentication...");
+
+    // Get data from authentication notification
+    let mut notification_stream = device.notifications().await?;
+    while let Some(data) = notification_stream.next().await {
+        println!(
+            "Received data from [{:?}]: {:?}",
+            data.uuid, data.value
+        );
+    }
+
+    Ok(())
 }
