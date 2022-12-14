@@ -1,15 +1,15 @@
-use aes::cipher::KeyInit;
+use aes::cipher::{KeyInit, BlockEncrypt};
 use btleplug::api::{Characteristic, CharPropFlags};
 use btleplug::api::{bleuuid::uuid_from_u16, Central, Manager as _, Peripheral as _, ScanFilter, WriteType};
 use btleplug::platform::{Adapter, Manager, Peripheral};
 use futures::stream::StreamExt;
-use rand::{Rng, thread_rng};
+use rand::{Rng, thread_rng, random};
 use std::error::Error;
 use std::thread;
 use std::time::Duration;
 use tokio::time;
 use uuid::Uuid;
-use aes::Aes128;
+use aes::{Aes128, Block};
 
 macro_rules! create_uuid {
     ($a:expr) => {Uuid::parse_str($a).unwrap()};
@@ -118,7 +118,7 @@ async fn authenticate(device: &Peripheral, auth_char: &Characteristic) -> Result
     println!("Starting Authentication...");
 
     // Ask for Authentication
-    device.write(auth_char,&[0x01, 0x00], WriteType::WithoutResponse).await?;
+    device.write(auth_char,&[0x02, 0x00], WriteType::WithoutResponse).await?;
 
     // Get data from authentication notification
     let mut notification_stream = device.notifications().await?;
@@ -135,14 +135,22 @@ async fn authenticate(device: &Peripheral, auth_char: &Characteristic) -> Result
         if data.uuid == auth_char.uuid {
             let random_number = &data.value[3..];
 
-            println!("Number Received : {:#?}", random_number);
+            println!("Number Received : {:?}", random_number);
+            
+            println!("Encrypting...");
+            let cipher = Aes128::new_from_slice(&AUTH_KEY).unwrap();
 
-            //let cipher = Aes128::new_from_slice(&AUTH_KEY);
+            // Create a block
+            let mut blk = Block::clone_from_slice(random_number);
+            cipher.encrypt_block(&mut blk);
 
+            println!("Number Encrypted : {:?}", blk);
 
-            //let RANDOM_NUMBER_ENCRYPTED = 
+            let encrypted_number: &[u8] = blk.as_slice();
+            
+
             // We are sending the encrypted key
-            //device.write(auth_char, &[0x00, 0x03], WriteType::WithResponse).await?;
+            device.write(auth_char, &[[0x03,0x00].as_slice(), encrypted_number].concat(), WriteType::WithoutResponse).await?;
         }
     }
 
