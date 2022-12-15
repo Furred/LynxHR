@@ -1,5 +1,5 @@
-use std::error::Error;
-use std::time::Duration;
+mod chars;
+mod utils;
 
 use aes::{Aes128, Block};
 use aes::cipher::{BlockEncrypt, KeyInit};
@@ -7,17 +7,15 @@ use anyhow::bail;
 use btleplug::api::{Central, Manager as _, Peripheral as _, PeripheralProperties, ScanFilter, WriteType};
 use btleplug::api::{Characteristic, CharPropFlags};
 use btleplug::platform::{Manager, Peripheral};
+use chrono::naive::NaiveTime;
 use futures::stream::StreamExt;
 use log::{debug, error, info, warn};
 use tokio::time;
 use uuid::Uuid;
 
-
-mod chars;
-mod utils;
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    println!("LynxHR Version v1.0 BETA");
     pretty_env_logger::init();
     println!("LynxHR Version v0.0.1 ALPHA");
 
@@ -100,7 +98,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             // Authentication Challange
             let auth: Characteristic = create_char!(
                     "00000009-0000-3512-2118-0009af100700",
-                    "0000fee0-0000-1000-8000-00805f9b34fb",
+                    "0000fee1-0000-1000-8000-00805f9b34fb",
                     (NOTIFY, WRITE_WITHOUT_RESPONSE)
                 );
 
@@ -233,6 +231,7 @@ async fn hr_control_test(device: &Peripheral, char: &Characteristic) -> anyhow::
 
             debug!("Received data from [{:?}]: {:?}", data.uuid, data.value);
 
+            let mut datapackage = SendData::default();
             let hr_mesure_uuid = create_uuid!("00002a37-0000-1000-8000-00805f9b34fb");
 
             // Battery
@@ -248,10 +247,36 @@ async fn hr_control_test(device: &Peripheral, char: &Characteristic) -> anyhow::
                     bat_data, 0
                 );
                 info!("info: Current Time -> {:?}", time_data);
+                // Parse Data into Datapack
+                datapackage.hr = data.value[1];
+                datapackage.battery_percentage = bat_data[1];
+                datapackage.charging = bat_data[2] == 0x01;
+                let tmp_current_hour = time_data[4];
+                let tmp_current_minute = time_data[5];
+                datapackage.time =
+                    NaiveTime::from_hms_opt(tmp_current_hour as u32, tmp_current_minute as u32, 0)
+                        .unwrap_or(NaiveTime::from_hms_opt(0, 0, 0).unwrap());
+                println!("Data Package : {:?}", datapackage);
             }
         }
+
         device
             .write(char, &[0x15, 0x01, 0x00], WriteType::WithResponse)
             .await?;
+
+        time::sleep(Duration::from_secs(1)).await;
+
+        // Request HR Monitoring each 12s
+        device
+            .write(char, &[0x16], WriteType::WithoutResponse)
+            .await?;
     }
+}
+
+#[derive(Default, Debug)]
+pub struct SendData {
+    pub hr: u8,
+    pub battery_percentage: u8,
+    pub charging: bool,
+    pub time: NaiveTime,
 }
