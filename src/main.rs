@@ -66,7 +66,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 // Authentication Challange
                 let auth: Characteristic = create_char!(
                     "00000009-0000-3512-2118-0009af100700",
-                    "0000fee0-0000-1000-8000-00805f9b34fb",
+                    "0000fee1-0000-1000-8000-00805f9b34fb",
                     (NOTIFY, WRITE_WITHOUT_RESPONSE)
                 );
 
