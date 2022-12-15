@@ -11,7 +11,7 @@ use btleplug::api::{Characteristic, CharPropFlags};
 use btleplug::platform::{Manager, Peripheral};
 use chrono::naive::NaiveTime;
 use futures::stream::StreamExt;
-use log::{debug, error, info, warn};
+use log::{debug, error, info, trace, warn};
 use tokio::time;
 use uuid::Uuid;
 
@@ -125,15 +125,15 @@ async fn subscribe_to_characteristic(
     // Note to Lynix: Use borrows whenever possible (&), Remember Ownership*
 
     if authenticated == false {
-        println!("Info: Discovering Services...");
+        debug!("Info: Discovering Services...");
         device.discover_services().await?;
     }
 
-    println!("Info: Subscribing to Chars...");
+    debug!("Info: Subscribing to Chars...");
     let characteristics = device.characteristics();
     for characteristic in characteristics {
         if uuids.contains(&characteristic.uuid) {
-            println!("Subscribing to characteristic {:?}", characteristic);
+            trace!("Subscribing to characteristic {:?}", characteristic);
             device.subscribe(&characteristic).await?;
         }
     }
