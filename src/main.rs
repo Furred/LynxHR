@@ -2,14 +2,12 @@ use btleplug::api::{Characteristic, CharPropFlags};
 use btleplug::api::{Central, Manager as _, Peripheral as _, ScanFilter, WriteType};
 use btleplug::platform::{Manager, Peripheral};
 use futures::stream::StreamExt;
-use rand::random;
 use std::error::Error;
 use std::time::Duration;
 use tokio::time;
 use uuid::Uuid;
 use aes::{Aes128, Block};
 use aes::cipher::{KeyInit, BlockEncrypt};
-use libaes::Cipher;
 
 macro_rules! create_uuid {
     ($a:expr) => {Uuid::parse_str($a).unwrap()};
