@@ -1,15 +1,13 @@
-use aes::cipher::{KeyInit, BlockEncrypt};
 use btleplug::api::{Characteristic, CharPropFlags};
-use btleplug::api::{bleuuid::uuid_from_u16, Central, Manager as _, Peripheral as _, ScanFilter, WriteType};
-use btleplug::platform::{Adapter, Manager, Peripheral};
+use btleplug::api::{Central, Manager as _, Peripheral as _, ScanFilter, WriteType};
+use btleplug::platform::{Manager, Peripheral};
 use futures::stream::StreamExt;
-use rand::{Rng, thread_rng, random};
 use std::error::Error;
-use std::thread;
 use std::time::Duration;
 use tokio::time;
 use uuid::Uuid;
 use aes::{Aes128, Block};
+use aes::cipher::{KeyInit, BlockEncrypt};
 
 macro_rules! create_uuid {
     ($a:expr) => {Uuid::parse_str($a).unwrap()};
@@ -113,7 +111,7 @@ async fn subscribe_to_characteristic(device: &Peripheral, uuids: &[Uuid]) -> Res
 // Authentication Function
 async fn authenticate(device: &Peripheral, auth_char: &Characteristic) -> Result<(), Box<dyn Error>> {         
 
-    let AUTH_KEY = 0xc9a57d375d8d96ffd3331b73b123d43bu128.to_le_bytes(); // Auth Key as Hex
+    let auth_key = 0xc9a57d375d8d96ffd3331b73b123d43bu128.to_le_bytes(); // Auth Key as Hex
 
     println!("Starting Authentication...");
 
@@ -138,7 +136,7 @@ async fn authenticate(device: &Peripheral, auth_char: &Characteristic) -> Result
             println!("Number Received : {:?}", random_number);
             
             println!("Encrypting...");
-            let cipher = Aes128::new_from_slice(&AUTH_KEY).unwrap();
+            let cipher = Aes128::new_from_slice(&auth_key).unwrap();
 
             // Create a block
             let mut blk = Block::clone_from_slice(random_number);
