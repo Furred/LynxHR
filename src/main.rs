@@ -2,6 +2,7 @@ mod chars;
 mod utils;
 
 use std::error::Error;
+use std::sync::Arc;
 use std::time::Duration;
 use aes::{Aes128, Block};
 use aes::cipher::{BlockEncrypt, KeyInit};
@@ -56,7 +57,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
 
         info!("Available Devices -> {}", devices.len());
-
         for device in devices.iter() {
             let properties: Option<PeripheralProperties>;
             match device.properties().await {
@@ -114,7 +114,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 
             // Authentification Success Testing
-            hr_control_test(&device, &chars::HR_CONTROL).await?;
+            hr_control_test(Arc::new(device.clone()), Arc::new(chars::HR_CONTROL.clone())).await?;
         }
     }
 }
@@ -219,16 +219,18 @@ async fn authenticate(
 }
 
 // Get Heart Rate
-async fn hr_control_test(device: &Peripheral, char: &Characteristic) -> anyhow::Result<()> {
-    loop {
+async fn hr_control_test(device: Arc<Peripheral>, char: Arc<Characteristic>) -> anyhow::Result<()> {
         // Force Heartrate
         device
-            .write(char, &[0x15, 0x02, 0x00], WriteType::WithResponse)
+            .write(&*char, &[0x15, 0x02, 0x00], WriteType::WithResponse)
             .await?;
         device
-            .write(char, &[0x15, 0x01, 0x00], WriteType::WithResponse)
+            .write(&*char, &[0x15, 0x01, 0x00], WriteType::WithResponse)
             .await?;
-
+        device
+            .write(&*char, &[0x15, 0x01, 0x01], WriteType::WithResponse)
+            .await?;
+    loop {
         // Read Heartrate
         let mut notification_stream = device.notifications().await?;
         while let Some(data) = notification_stream.next().await {
@@ -259,16 +261,10 @@ async fn hr_control_test(device: &Peripheral, char: &Characteristic) -> anyhow::
             }
         }
 
-        device
-            .write(char, &[0x15, 0x01, 0x00], WriteType::WithResponse)
-            .await?;
-
         time::sleep(Duration::from_secs(1)).await;
 
-        // Request HR Monitoring each 12s
-        device
-            .write(char, &[0x16], WriteType::WithoutResponse)
-            .await?;
+        // Request HR Monitoring each 12s, using the start_ping function, spawning it in a new thread
+        tokio::spawn(start_ping(device.clone(), char.clone()));
     }
 }
 
@@ -278,4 +274,16 @@ pub struct SendData {
     pub battery_percentage: u8,
     pub charging: bool,
     pub time: NaiveTime,
+}
+
+
+async fn start_ping(device: Arc<Peripheral>, char: Arc<Characteristic>) {
+    loop {
+        if let Err(_) = device.write(&*char, &[0x16], WriteType::WithoutResponse).await {
+            error!("Failed to send ping!");
+            return;
+        };
+        debug!("Sent ping!");
+        time::sleep(Duration::from_secs(12)).await;
+    }
 }
