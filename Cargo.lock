@@ -13,6 +13,7 @@ dependencies = [
  "futures",
  "hex",
  "hex-literal",
+ "libaes",
  "rand",
  "tokio",
  "uuid",
@@ -535,6 +536,12 @@ dependencies = [
  "static_assertions",
  "uuid",
 ]
+
+[[package]]
+name = "libaes"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb1f4e141b777ff28016e00e1f2e4846be9d1255f000823d54ea99bb70b3f15b"
 
 [[package]]
 name = "libc"
