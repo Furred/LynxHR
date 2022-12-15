@@ -1,6 +1,8 @@
 mod chars;
 mod utils;
 
+use std::error::Error;
+use std::time::Duration;
 use aes::{Aes128, Block};
 use aes::cipher::{BlockEncrypt, KeyInit};
 use anyhow::bail;
@@ -241,12 +243,6 @@ async fn hr_control_test(device: &Peripheral, char: &Characteristic) -> anyhow::
             let time_data = device.read(&chars::TIME).await?;
 
             if data.uuid == hr_mesure_uuid {
-                info!("info: Current HR -> {:?}bpm", data.value.to_vec());
-                info!(
-                    "info: Current Battery -> Percentage : {:?}% | Charging : {:?}",
-                    bat_data, 0
-                );
-                info!("info: Current Time -> {:?}", time_data);
                 // Parse Data into Datapack
                 datapackage.hr = data.value[1];
                 datapackage.battery_percentage = bat_data[1];
@@ -256,7 +252,7 @@ async fn hr_control_test(device: &Peripheral, char: &Characteristic) -> anyhow::
                 datapackage.time =
                     NaiveTime::from_hms_opt(tmp_current_hour as u32, tmp_current_minute as u32, 0)
                         .unwrap_or(NaiveTime::from_hms_opt(0, 0, 0).unwrap());
-                println!("Data Package : {:?}", datapackage);
+                info!("Data Package : {:?}", datapackage);
             }
         }
 
