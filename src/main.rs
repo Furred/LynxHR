@@ -18,6 +18,7 @@ use uuid::Uuid;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     warn!("LynxHR Version v1.0 BETA");
+    log::set_max_level(log::LevelFilter::Info);
     pretty_env_logger::init();
 
     loop {
