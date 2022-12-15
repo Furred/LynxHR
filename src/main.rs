@@ -19,7 +19,7 @@ use uuid::Uuid;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     pretty_env_logger::formatted_timed_builder()
-        .filter_level(log::LevelFilter::Info)
+        .filter_level(log::LevelFilter::Debug)
         .init();
     warn!("LynxHR Version v1.0 BETA");
     info!("Starting LynxHR...");
@@ -227,9 +227,12 @@ async fn hr_control_test(device: Arc<Peripheral>, char: Arc<Characteristic>) -> 
         device
             .write(&*char, &[0x15, 0x01, 0x00], WriteType::WithResponse)
             .await?;
+        device.write(&*chars::HR_MEASURE, &[0x01], WriteType::WithResponse).await?;
         device
             .write(&*char, &[0x15, 0x01, 0x01], WriteType::WithResponse)
             .await?;
+        // Request HR Monitoring each 12s, using the start_ping function, spawning it in a new thread
+        tokio::spawn(start_ping(device.clone(), char.clone()));
     loop {
         // Read Heartrate
         let mut notification_stream = device.notifications().await?;
@@ -263,8 +266,6 @@ async fn hr_control_test(device: Arc<Peripheral>, char: Arc<Characteristic>) -> 
 
         time::sleep(Duration::from_secs(1)).await;
 
-        // Request HR Monitoring each 12s, using the start_ping function, spawning it in a new thread
-        tokio::spawn(start_ping(device.clone(), char.clone()));
     }
 }
 
