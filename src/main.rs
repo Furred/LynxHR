@@ -131,24 +131,38 @@ async fn authenticate(device: &Peripheral, auth_char: &Characteristic) -> Result
 
         // This means we received authentication information
         if data.uuid == auth_char.uuid {
-            let random_number = &data.value[3..];
-
-            println!("Number Received : {:?}", random_number);
+            println!("Debug : {:?}", &data.value[..3]);
             
-            println!("Encrypting...");
-            let cipher = Aes128::new_from_slice(&auth_key).unwrap();
+            if &data.value[..3] == [0x10, 0x02, 0x01] {
+                let random_number = &data.value[3..];
 
-            // Create a block
-            let mut blk = Block::clone_from_slice(random_number);
-            cipher.encrypt_block(&mut blk);
+                println!("Number Received : {:?}", random_number);
+                
+                println!("Encrypting...");
+                let cipher = Aes128::new_from_slice(&auth_key).unwrap();
+    
+                // Create a block
+                let mut blk = Block::clone_from_slice(random_number);
+                cipher.encrypt_block(&mut blk);
+    
+                println!("Number Encrypted : {:?}", blk);
+    
+                let encrypted_number: &[u8] = blk.as_slice();
+                
+    
+                // We are sending the encrypted key
+                device.write(auth_char, &[[0x03,0x00].as_slice(), encrypted_number].concat(), WriteType::WithoutResponse).await?;
 
-            println!("Number Encrypted : {:?}", blk);
+                println!("info: sent AUTHENTIFICATION_CHALLANGE")
+            }
 
-            let encrypted_number: &[u8] = blk.as_slice();
-            
+            if &data.value[..3] == [0x10, 0x03, 0x08] {
+                println!("error: AUTHENTICATION_FAILED");
+            }
 
-            // We are sending the encrypted key
-            device.write(auth_char, &[[0x03,0x00].as_slice(), encrypted_number].concat(), WriteType::WithoutResponse).await?;
+            if &data.value[..3] == [0x10, 0x03, 0x01] {
+                println!("info: AUTHENTICATION_SUCCESS");
+            }
         }
     }
 
