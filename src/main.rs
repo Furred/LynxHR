@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         // Authentication Required
         create_uuid!("00002a37-0000-1000-8000-00805f9b34fb"), // HR Mesure
-        create_uuid!("00002a39-0000-1000-8000-00805f9b34fb") // HR Control
+        //create_uuid!("00002a39-0000-1000-8000-00805f9b34fb") // HR Control
     ];
 
     loop {
@@ -73,28 +73,31 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 println!("Warning! Authentication Key is required to access your device!");
     
                 // Subscribe to Auth Char
-                subscribe_to_characteristic(&device, &chars[..3]).await?;
+                subscribe_to_characteristic(&device, &chars[..3], false).await?;
 
                 // Authentication Challange
                 let auth: Characteristic = Characteristic { 
                     uuid: Uuid::parse_str("00000009-0000-3512-2118-0009af100700").unwrap(), 
                     service_uuid: Uuid::parse_str("0000fee1-0000-1000-8000-00805f9b34fb").unwrap(), 
                     properties: CharPropFlags::NOTIFY | CharPropFlags::WRITE_WITHOUT_RESPONSE | CharPropFlags::NOTIFY
-                    // "READ | WRITE_WITHOUT_RESPONSE | NOTIFY" 
                 };
 
-                authenticate(&device, &auth).await?;
+                authenticate(&device, &auth, &chars[3..]).await?;
+
+                // Authentification Success Testing
             }
         }
     }
 
 }
 
-async fn subscribe_to_characteristic(device: &Peripheral, uuids: &[Uuid]) -> Result<(), Box<dyn Error>> {        
+async fn subscribe_to_characteristic(device: &Peripheral, uuids: &[Uuid], authenticated: bool) -> Result<(), Box<dyn Error>> {        
     // Note to Lynix: Use borrows whenever possible (&), Remember Ownership*
 
-    println!("Info: Discovering Services...");
-    device.discover_services().await?;
+    if authenticated == false {
+        println!("Info: Discovering Services...");
+        device.discover_services().await?;
+    }
 
     println!("Info: Subscribing to Chars...");
     let characteristics = device.characteristics();
@@ -109,7 +112,7 @@ async fn subscribe_to_characteristic(device: &Peripheral, uuids: &[Uuid]) -> Res
 }
 
 // Authentication Function
-async fn authenticate(device: &Peripheral, auth_char: &Characteristic) -> Result<(), Box<dyn Error>> {         
+async fn authenticate(device: &Peripheral, auth_char: &Characteristic, chars: &[Uuid]) -> Result<(), Box<dyn Error>> {         
 
     let auth_key: &[u8] = &0xc9a57d375d8d96ffd3331b73b123d43bu128.to_be_bytes();
 
@@ -162,9 +165,45 @@ async fn authenticate(device: &Peripheral, auth_char: &Characteristic) -> Result
 
             if &data.value[..3] == [0x10, 0x03, 0x01] {
                 println!("info: AUTHENTICATION_SUCCESS");
+
+                // Initialize
+                subscribe_to_characteristic(&device, chars, true).await?;
+
+                let hr_control: Characteristic = Characteristic { 
+                    uuid: Uuid::parse_str("00002a39-0000-1000-8000-00805f9b34fb").unwrap(), 
+                    service_uuid: Uuid::parse_str("0000180d-0000-1000-8000-00805f9b34fb").unwrap(), 
+                    properties: CharPropFlags::READ | CharPropFlags::WRITE
+                };
+                hr_control_test(&device, &hr_control).await?;
             }
         }
     }
 
     Ok(())
+}
+
+// Get Heart Rate
+async fn hr_control_test(device: &Peripheral, char: &Characteristic) -> Result<(), Box<dyn Error>> {    
+    loop {
+        // Force Heartrate
+        device.write(char, &[0x15, 0x02, 0x00], WriteType::WithResponse).await?;
+        device.write(char, &[0x15, 0x01, 0x00], WriteType::WithResponse).await?;
+
+        // Read Heartrate
+        let mut notification_stream = device.notifications().await?;
+        while let Some(data) = notification_stream.next().await {
+            println!("Awaiting for Data...");
+            
+            println!(
+                "Received data from [{:?}]: {:?}",
+                data.uuid, data.value
+            );
+
+            let hr_mesure_uuid = Uuid::parse_str("00002a37-0000-1000-8000-00805f9b34fb").unwrap();
+            if data.uuid == hr_mesure_uuid {
+                println!("info: Current HR -> {:?}bpm", data.value.to_vec());
+            }
+        }
+        device.write(char, &[0x15, 0x01, 0x00], WriteType::WithResponse).await?;
+    }
 }
