@@ -17,9 +17,8 @@ use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    println!("LynxHR Version v1.0 BETA");
+    warn!("LynxHR Version v1.0 BETA");
     pretty_env_logger::init();
-    println!("LynxHR Version v0.0.1 ALPHA");
 
     loop {
         let manager = Manager::new().await.unwrap();
