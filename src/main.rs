@@ -64,13 +64,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 subscribe_to_characteristic(&device, &chars::CHARS_UUIDS[..3], false).await?;
 
                 // Authentication Challange
-                let auth: Characteristic = Characteristic {
-                    uuid: create_uuid!("00000009-0000-3512-2118-0009af100700"),
-                    service_uuid: create_uuid!("0000fee1-0000-1000-8000-00805f9b34fb"),
-                    properties: CharPropFlags::NOTIFY
-                        | CharPropFlags::WRITE_WITHOUT_RESPONSE
-                        | CharPropFlags::NOTIFY,
-                };
+                let auth: Characteristic = create_char!(
+                    "00000009-0000-3512-2118-0009af100700",
+                    "0000fee0-0000-1000-8000-00805f9b34fb",
+                    (NOTIFY, WRITE_WITHOUT_RESPONSE)
+                );
 
                 authenticate(&device, &auth, &chars::CHARS_UUIDS[3..]).await?;
 
@@ -194,7 +192,7 @@ async fn hr_control_test(device: &Peripheral, char: &Characteristic) -> Result<(
 
             println!("Received data from [{:?}]: {:?}", data.uuid, data.value);
 
-            let hr_mesure_uuid = Uuid::parse_str("00002a37-0000-1000-8000-00805f9b34fb").unwrap();
+            let hr_mesure_uuid = create_uuid!("00002a37-0000-1000-8000-00805f9b34fb");
 
             // Battery
             let bat_data = device.read(&chars::BATTERY).await?;
