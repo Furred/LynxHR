@@ -200,8 +200,29 @@ async fn hr_control_test(device: &Peripheral, char: &Characteristic) -> Result<(
             );
 
             let hr_mesure_uuid = Uuid::parse_str("00002a37-0000-1000-8000-00805f9b34fb").unwrap();
+
+            let battery: Characteristic = Characteristic { 
+                uuid: Uuid::parse_str("00000006-0000-3512-2118-0009af100700").unwrap(), 
+                service_uuid: Uuid::parse_str("0000fee0-0000-1000-8000-00805f9b34fb").unwrap(), 
+                properties: CharPropFlags::READ
+            };
+
+            let time: Characteristic = Characteristic { 
+                uuid: Uuid::parse_str("00002a2b-0000-1000-8000-00805f9b34fb").unwrap(), 
+                service_uuid: Uuid::parse_str("0000fee0-0000-1000-8000-00805f9b34fb").unwrap(), 
+                properties: CharPropFlags::READ
+            };
+
+            // Battery
+            let bat_data = device.read(&battery).await?;
+
+            // Time
+            let time_data = device.read(&battery).await?;
+
             if data.uuid == hr_mesure_uuid {
                 println!("info: Current HR -> {:?}bpm", data.value.to_vec());
+                println!("info: Current Battery -> Percentage : {:?}% | Charging : {:?}", bat_data, 0);
+                println!("info: Current Time -> {:?}", time_data);
             }
         }
         device.write(char, &[0x15, 0x01, 0x00], WriteType::WithResponse).await?;
