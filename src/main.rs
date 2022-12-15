@@ -217,7 +217,7 @@ async fn hr_control_test(device: &Peripheral, char: &Characteristic) -> Result<(
             let bat_data = device.read(&battery).await?;
 
             // Time
-            let time_data = device.read(&battery).await?;
+            let time_data = device.read(&time).await?;
 
             if data.uuid == hr_mesure_uuid {
                 println!("info: Current HR -> {:?}bpm", data.value.to_vec());
