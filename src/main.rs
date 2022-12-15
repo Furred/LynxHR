@@ -230,6 +230,9 @@ async fn hr_control_test(device: Arc<Peripheral>, char: Arc<Characteristic>) -> 
         device
             .write(&*char, &[0x15, 0x01, 0x01], WriteType::WithResponse)
             .await?;
+
+        // Request HR Monitoring each 12s, using the start_ping function, spawning it in a new thread
+        tokio::spawn(start_ping(device.clone(), char.clone()));
     loop {
         // Read Heartrate
         let mut notification_stream = device.notifications().await?;
@@ -262,9 +265,6 @@ async fn hr_control_test(device: Arc<Peripheral>, char: Arc<Characteristic>) -> 
         }
 
         time::sleep(Duration::from_secs(1)).await;
-
-        // Request HR Monitoring each 12s, using the start_ping function, spawning it in a new thread
-        tokio::spawn(start_ping(device.clone(), char.clone()));
     }
 }
 
