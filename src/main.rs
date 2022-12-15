@@ -81,6 +81,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .local_name
                 .unwrap_or(String::from("(peripheral name unknown)"));
 
+            if local_name == "(peripheral name unknown)" {
+                error!("Failed to get peripheral name!");
+                error!("Skipping device...");
+                continue;
+            }
+                
             /* Connect To Device */
             if !is_connected {
                 debug!("Connecting to peripheral {:?}...", &local_name);
@@ -227,7 +233,7 @@ async fn hr_control_test(device: Arc<Peripheral>, char: Arc<Characteristic>) -> 
         device
             .write(&*char, &[0x15, 0x01, 0x00], WriteType::WithResponse)
             .await?;
-        device.write(&*chars::HR_MEASURE, &[0x01], WriteType::WithResponse).await?;
+        device.write(&*chars::HR_MEASURE, &[0x01, 0x00], WriteType::WithResponse).await?;
         device
             .write(&*char, &[0x15, 0x01, 0x01], WriteType::WithResponse)
             .await?;

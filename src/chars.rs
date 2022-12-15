@@ -36,8 +36,8 @@ pub(crate) static ref HR_CONTROL: Characteristic = create_char!(
     );
 
     pub(crate) static ref HR_MEASURE: Characteristic = create_char!(
-        "00002a39-0000-1000-8000-00805f9b34fb",
         "00002a37-0000-1000-8000-00805f9b34fb",
+        "0000180d-0000-1000-8000-00805f9b34fb",
         (READ, WRITE)
     );
 
