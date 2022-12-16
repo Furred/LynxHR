@@ -18,7 +18,7 @@ use uuid::Uuid;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     pretty_env_logger::formatted_timed_builder()
-        .filter_level(log::LevelFilter::Trace)
+        .filter_level(log::LevelFilter::Info)
         .init();
     warn!("LynxHR Version v1.0 BETA");
     info!("Starting LynxHR...");
@@ -210,6 +210,7 @@ async fn authenticate(
                     error!("Failed to subscribe to Characteristics!");
                     bail!("Failed to subscribe to Characteristics!");
                 }
+                return Ok(());
             }
         }
     }
