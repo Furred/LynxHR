@@ -233,10 +233,6 @@ async fn hr_control_test(device: Arc<Peripheral>, char: Arc<Characteristic>) -> 
         device
             .write(&*char, &[0x15, 0x01, 0x00], WriteType::WithResponse)
             .await?;
-        device.write(&*chars::HR_MEASURE, &[0x01, 0x00], WriteType::WithResponse).await?;
-        device
-            .write(&*char, &[0x15, 0x01, 0x01], WriteType::WithResponse)
-            .await?;
         // Request HR Monitoring each 12s, using the start_ping function, spawning it in a new thread
         tokio::spawn(start_ping(device.clone(), char.clone()));
 
@@ -271,7 +267,7 @@ async fn hr_control_test(device: Arc<Peripheral>, char: Arc<Characteristic>) -> 
             }
         }
 
-        time::sleep(Duration::from_secs(1)).await;
+        time::sleep(Duration::from_millis(500)).await;
 
     }
 }
@@ -292,6 +288,12 @@ async fn start_ping(device: Arc<Peripheral>, char: Arc<Characteristic>) {
             return;
         };
         debug!("Sent ping!");
-        time::sleep(Duration::from_secs(12)).await;
+
+        debug!("Writing Force Command...");
+        if let Err(_) = device.write(&*char, &[0x15, 0x01, 0x01], WriteType::WithResponse).await {
+            error!("Error Writing Force Command!");
+            return;
+        };
+        time::sleep(Duration::from_secs(30)).await;
     }
 }
