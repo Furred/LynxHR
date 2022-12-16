@@ -12,6 +12,7 @@ pub(crate) static ref CHARS_UUIDS: Vec<Uuid> = vec![
     // Authentication Required
     create_uuid!("00002a37-0000-1000-8000-00805f9b34fb"), // HR Mesure
                                                           //create_uuid!("00002a39-0000-1000-8000-00805f9b34fb") // HR Control
+    create_uuid!("00000001-0000-3512-2118-0009af100700"), // Sensor Sp02?  Maybe
 ];
 
 // Chars Objects
