@@ -4,6 +4,10 @@
 // The function should be called from the main thread, and should return a tokio task
 // This trait basically is only a function that from a self and a receiver channel, returns a tokio task
 
+
+// The struct that implements the ReceiverService trait is also the one that clap fills with the command line arguments
+// If self is none, the JoinHandle should return immediately, i.e. be an empty task
+
 use crate::utils::SendData;
 use crossbeam_channel::Receiver;
 use tokio::task::JoinHandle;

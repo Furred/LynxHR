@@ -6,7 +6,7 @@ use clap::clap_derive::{Args, Parser, Subcommand};
 pub(crate) struct Cli {
     #[command(subcommand)]
     pub(crate) subcommand: Subcommand,
-    #[arg(short = 'v', long = "verbose", action = clap::ArgAction::Count, help = "Sets the level of verbosity")]
+    #[arg(short = 'v', long = "verbose", action = clap::ArgAction::Count, help = "Sets the level of verbosity", global(true))]
     pub(crate) verbose: u8,
 }
 #[derive(Debug, Subcommand)]
@@ -26,7 +26,8 @@ pub(crate) struct Run {
     pub(crate) api_key: String,
     #[arg(
         long = "adapter",
-        help = "The adapter number to use. Use list_adapters to get the list of adapters"
+        help = "The adapter number to use. Use list_adapters to get the list of adapters",
+        default_value = "0"
     )]
     pub(crate) adapter: u8,
     #[arg(
@@ -58,6 +59,8 @@ pub(crate) struct ListDevices {
     )]
     pub(crate) adapter: u8,
 }
+
+// TODO: Implemment a better way to handle the sender commands, making a function that registers the sender commands and calls them when needed
 
 #[derive(Debug, Args)]
 pub(crate) struct SenderCommands {}

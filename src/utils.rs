@@ -24,7 +24,7 @@ macro_rules! create_char {
 // put the macro at the end of args.rs like this:
 // create_sender!(sender_name, config_struct)
 // Then, in the sender_commands struct, add this line:
-// #[command(flatten)] sender_name: sender_name,
+// #[command(flatten)] sender_name: Option<sender_name>,
 #[macro_export]
 macro_rules! create_sender {
     ($name:ident, $other:ident) => {
