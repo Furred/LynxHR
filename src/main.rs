@@ -1,13 +1,13 @@
-mod chars;
-mod utils;
-
 use std::error::Error;
 use std::sync::Arc;
 use std::time::Duration;
+
 use aes::{Aes128, Block};
 use aes::cipher::{BlockEncrypt, KeyInit};
 use anyhow::bail;
-use btleplug::api::{Central, Manager as _, Peripheral as _, PeripheralProperties, ScanFilter, WriteType};
+use btleplug::api::{
+    Central, Manager as _, Peripheral as _, PeripheralProperties, ScanFilter, WriteType,
+};
 use btleplug::api::{Characteristic, CharPropFlags};
 use btleplug::platform::{Manager, Peripheral};
 use chrono::naive::NaiveTime;
@@ -15,6 +15,9 @@ use futures::stream::StreamExt;
 use log::{debug, error, info, trace, warn};
 use tokio::time;
 use uuid::Uuid;
+
+mod chars;
+mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -86,7 +89,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 error!("Skipping device...");
                 continue;
             }
-                
+
             /* Connect To Device */
             if !is_connected {
                 debug!("Connecting to peripheral {:?}...", &local_name);
@@ -99,7 +102,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
             info!("Warning! Authentication Key is required to access your device!");
 
             // Subscribe to Auth Char
-            if let Err(_) = subscribe_to_characteristic(&device, &chars::CHARS_UUIDS[..3], false).await {
+            if let Err(_) =
+                subscribe_to_characteristic(&device, &chars::CHARS_UUIDS[..3], false).await
+            {
                 error!("Failed to subscribe to Characteristics!");
                 error!("Skipping device...");
                 continue;
@@ -107,10 +112,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
             // Authentication Challange
             let auth: Characteristic = create_char!(
-                    "00000009-0000-3512-2118-0009af100700",
-                    "0000fee1-0000-1000-8000-00805f9b34fb",
-                    (NOTIFY, WRITE_WITHOUT_RESPONSE)
-                );
+                "00000009-0000-3512-2118-0009af100700",
+                "0000fee1-0000-1000-8000-00805f9b34fb",
+                (NOTIFY, WRITE_WITHOUT_RESPONSE)
+            );
 
             if let Err(_) = authenticate(&device, &auth, &chars::CHARS_UUIDS[3..]).await {
                 error!("Failed to Authenticate!");
@@ -118,9 +123,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 continue;
             }
 
-
             // Authentification Success Testing
-            hr_control_test(Arc::new(device.clone()), Arc::new(chars::HR_CONTROL.clone())).await?;
+            hr_control_test(
+                Arc::new(device.clone()),
+                Arc::new(chars::HR_CONTROL.clone()),
+            )
+                .await?;
         }
     }
 }
@@ -154,7 +162,7 @@ async fn authenticate(
     device: &Peripheral,
     auth_char: &Characteristic,
     chars: &[Uuid],
-) -> anyhow::Result<()>  {
+) -> anyhow::Result<()> {
     let auth_key: &[u8] = &0xc9a57d375d8d96ffd3331b73b123d43bu128.to_be_bytes();
 
     info!("Starting Authentication...");
@@ -226,15 +234,15 @@ async fn authenticate(
 
 // Get Heart Rate
 async fn hr_control_test(device: Arc<Peripheral>, char: Arc<Characteristic>) -> anyhow::Result<()> {
-        // Force Heartrate
-        device
-            .write(&*char, &[0x15, 0x02, 0x00], WriteType::WithResponse)
-            .await?;
-        device
-            .write(&*char, &[0x15, 0x01, 0x00], WriteType::WithResponse)
-            .await?;
-        // Request HR Monitoring each 12s, using the start_ping function, spawning it in a new thread
-        tokio::spawn(start_ping(device.clone(), char.clone()));
+    // Force Heartrate
+    device
+        .write(&*char, &[0x15, 0x02, 0x00], WriteType::WithResponse)
+        .await?;
+    device
+        .write(&*char, &[0x15, 0x01, 0x00], WriteType::WithResponse)
+        .await?;
+    // Request HR Monitoring each 12s, using the start_ping function, spawning it in a new thread
+    tokio::spawn(start_ping(device.clone(), char.clone()));
 
     loop {
         // Read Heartrate
@@ -268,7 +276,6 @@ async fn hr_control_test(device: Arc<Peripheral>, char: Arc<Characteristic>) -> 
         }
 
         time::sleep(Duration::from_millis(500)).await;
-
     }
 }
 
@@ -280,17 +287,22 @@ pub struct SendData {
     pub time: NaiveTime,
 }
 
-
 async fn start_ping(device: Arc<Peripheral>, char: Arc<Characteristic>) {
     loop {
-        if let Err(_) = device.write(&*char, &[0x16], WriteType::WithoutResponse).await {
+        if let Err(_) = device
+            .write(&*char, &[0x16], WriteType::WithoutResponse)
+            .await
+        {
             error!("Failed to send ping!");
             return;
         };
         debug!("Sent ping!");
 
         debug!("Writing Force Command...");
-        if let Err(_) = device.write(&*char, &[0x15, 0x01, 0x01], WriteType::WithResponse).await {
+        if let Err(_) = device
+            .write(&*char, &[0x15, 0x01, 0x01], WriteType::WithResponse)
+            .await
+        {
             error!("Error Writing Force Command!");
             return;
         };
