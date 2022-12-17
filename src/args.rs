@@ -11,18 +11,18 @@ pub(crate) struct Cli {
 }
 #[derive(Debug, Subcommand)]
 pub(crate) enum Subcommand {
-    #[command(name = "dry_run")]
+    #[command(name = "dry-run")]
     DryRun(DryRun),
     #[command(name = "run")]
     Run(Run),
-    #[command(name = "list_adapters")]
+    #[command(name = "list-adapters")]
     ListAdapters {},
-    #[command(name = "list_devices")]
+    #[command(name = "list-devices")]
     ListDevices(ListDevices),
 }
 #[derive(Debug, Args)]
 pub(crate) struct Run {
-    #[arg(long = "api_key", help = "The api key to use for the watch")]
+    #[arg(long = "api-key", help = "The api key to use for the watch")]
     pub(crate) api_key: String,
     #[arg(
         long = "adapter",
@@ -31,14 +31,16 @@ pub(crate) struct Run {
     )]
     pub(crate) adapter: u8,
     #[arg(
-        conflicts_with = "device_mac",
-        long = "device_name",
-        help = "The device name to use. Use list_devices to get the list of devices"
+        long = "device-name",
+        help = "The device name to use. Use list_devices to get the list of devices",
+        required_unless_present = "device_mac"
     )]
     pub(crate) device_name: Option<String>,
     #[arg(
-        long = "device_mac",
-        help = "The device mac address to use. Use list_devices to get the list of devices"
+        long = "device-mac",
+        help = "The device mac address to use. Use list_devices to get the list of devices",
+        required_unless_present = "device_name",
+        conflicts_with = "device_name"
     )]
     pub(crate) device_mac: Option<String>,
     #[command(flatten)]
