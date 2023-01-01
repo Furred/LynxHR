@@ -1,5 +1,5 @@
 # LynxHR
-LynxHR is used to monitor your heart rate in VR! Made in Rust!
+LynxHR is used to monitor your heart rate in VR & Games! Made in Rust! Fully Open-Source!
 
 # Features
 - Real-time Heartrate graphs in games!
