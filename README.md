@@ -30,6 +30,7 @@ LynxHR is used to monitor your heart rate in VR & Games! Made in Rust! Fully Ope
 - Apple Watch 5
 - Apple Watch 6
 - Apple Watch 7
+- Apple Watch 8
 - Fitbit Ionic
 - Fitbit Versa
 - Fitbit Versa Lite
