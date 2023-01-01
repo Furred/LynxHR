@@ -2,6 +2,12 @@
 LynxHR is used to monitor your heart rate in VR! Made in Rust!
 
 # Features
+- Modular
+- RPC Support
+- NeosVR Support
+- VRChat Support
+- Unity Hook Compatible (For custom games)
+- Unreal Engine 5 Hook Compatible (For custom games)
 
 # Currently Supported Devices
 - Xiaomi Mi Band 5
