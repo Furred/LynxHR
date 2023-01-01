@@ -10,4 +10,4 @@ LynxHR is used to monitor your heart rate in VR! Made in Rust!
 - Amazefit 4
 
 # Devices Coming Soon
-- Samsung Galaxy Weatch 4
+- Samsung Galaxy Watch 4
