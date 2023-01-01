@@ -4,8 +4,8 @@ LynxHR is used to monitor your heart rate in VR! Made in Rust!
 # Features
 
 # Currently Supported Devices
-- Miband 5
-- Miband 4
+- Xiaomi Mi Band 5
+- Xiaomi Mi Band 4
 - Amazefit 5
 - Amazefit 4
 
@@ -29,3 +29,5 @@ LynxHR is used to monitor your heart rate in VR! Made in Rust!
 - Fossil Smart Watches (Gen 4 and Newer)
 - Google Pixel Watch
 - Samsung Galaxy Watch 5
+- Xiaomi Mi Band 2
+- Xiaomi Mi Band 3
