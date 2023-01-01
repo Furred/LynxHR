@@ -14,7 +14,18 @@ LynxHR is used to monitor your heart rate in VR! Made in Rust!
 
 # Progress for New Devices
 - Samsung Galaxy Watch 4 ===> ``5%``
-- Fossil Smart Watches (Gen 4 and Newer) ===> ``0%``
-- Google Pixel Watch ===> ``0%``
-- Samsung Galaxy Watch 5 ===> ``0%``
 
+# Planned Devices
+- Apple Watch 3
+- Apple Watch 4
+- Apple Watch 5
+- Apple Watch 6
+- Apple Watch 7
+- Fitbit Ionic
+- Fitbit Versa
+- Fitbit Versa Lite
+- Fitbit Versa 2
+- Fitbit Versa 3
+- Fossil Smart Watches (Gen 4 and Newer)
+- Google Pixel Watch
+- Samsung Galaxy Watch 5
