@@ -2,6 +2,9 @@
 LynxHR is used to monitor your heart rate in VR! Made in Rust!
 
 # Features
+- Real-time Heartrate graphs in games!
+- Monitor your watch battery!
+- Get notification if your device gets disconnected from LynxHR Server
 - Modular
 - RPC Support
 - NeosVR Support
