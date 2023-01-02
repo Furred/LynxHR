@@ -1,6 +1,9 @@
 # LynxHR
 LynxHR is used to monitor your heart rate in VR & Games! Made in Rust! Fully Open-Source!
 
+# Why LynxHR Compared to other programs?
+LynxHR Uses RPC Networking which makes it easier to connect to your device from across your house even if your PC is very far away from your watch! Bluetooth is also considered unstable on some cheaper bluetooth adapters, in this case LynxHR gains an advantage. It also provides simple intergration to all games like NeosVR, VRChat & LynxGame
+
 # Features
 - Real-time Heartrate graphs in games!
 - Monitor your watch battery!
