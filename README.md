@@ -16,7 +16,7 @@ LynxHR Uses RPC Networking which makes it easier to connect to your device from 
 - Unreal Engine 5 Hook Compatible (For custom games)
 
 # Currently Supported Devices
-- [Xiaomi Mi Band 5 (Legacy Only)](#)
+- [Xiaomi Mi Band 5 (Legacy Only)](https://github.com/Furred/LynxHR/wiki/Amazefit-5-&-Mi-Band-5)
 - Xiaomi Mi Band 4 (Legacy Only)
 - Amazefit 5 (Legacy Only)
 - Amazefit 4 (Legacy Only)
